@@ -1,0 +1,14 @@
+--- ../src-base/minecraft/net/minecraft/network/rcon/RConConsoleSource.java
++++ ../src-work/minecraft/net/minecraft/network/rcon/RConConsoleSource.java
+@@ -22,6 +22,10 @@
+         return "Rcon";
+     }
+ 
++    public void sendMessage(String message) {
++        this.field_70009_b.append(message);
++    }
++
+\ No newline at end of file
+     public void func_145747_a(ITextComponent p_145747_1_)
+     {
+         this.field_70009_b.append(p_145747_1_.func_150260_c());

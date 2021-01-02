@@ -21,7 +21,7 @@ import org.bukkit.help.HelpTopic;
 import org.bukkit.help.HelpTopicComparator;
 import org.bukkit.help.IndexHelpTopic;
 import org.bukkit.util.ChatPaginator;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.util.i18n.Message;
 
 public class HelpCommand extends BukkitCommand {
     public HelpCommand() {
@@ -97,10 +97,7 @@ public class HelpCommand extends BukkitCommand {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
-        if (!testPermission(sender)) {
-            sender.sendMessage(Message.getString("command.nopermission"));
-            return true;
-        }
+        if (!testPermission(sender)) return true;
 
         String command;
         int pageNumber;

@@ -400,7 +400,8 @@ public class CraftWorld implements World {
     }
 
     public Block getBlockAt(int x, int y, int z) {
-        return getChunkAt(x >> 4, z >> 4).getBlock(x & 0xF, y, z & 0xF);
+        Chunk chunk = getChunkAt(x >> 4, z >> 4);
+        return chunk == null ? null : chunk.getBlock(x & 0xF, y, z & 0xF);
     }
 
     public int getBlockTypeIdAt(int x, int y, int z) {
@@ -443,7 +444,8 @@ public class CraftWorld implements World {
     }
 
     public Chunk getChunkAt(int x, int z) {
-        return this.world.getChunkProvider().provideChunk(x, z).bukkitChunk;
+        net.minecraft.world.chunk.Chunk chunk = this.world.getChunkProvider().provideChunk(x, z);
+        return chunk == null ? null : chunk.bukkitChunk;
     }
 
     public Chunk getChunkAt(Block block) {
@@ -537,7 +539,7 @@ public class CraftWorld implements World {
             world.getChunkProvider().id2ChunkMap.put(chunkKey, chunk);
 
             chunk.onLoad();
-            chunk.populateCB(world.getChunkProvider(), world.getChunkProvider().chunkGenerator, true);
+            chunk.loadNearby(world.getChunkProvider(), world.getChunkProvider().chunkGenerator, true);
 
             refreshChunk(x, z);
         }
@@ -1159,7 +1161,7 @@ public class CraftWorld implements World {
         if (data != null && data.getClass().equals(org.bukkit.material.MaterialData.class)) {
             org.bukkit.material.MaterialData materialData = (org.bukkit.material.MaterialData) data;
             Validate.isTrue(materialData.getItemType().isBlock(), "Material must be block");
-            spigot().playEffect(loc, effect, materialData.getItemType().getId(), materialData.getData(), 0, 0, 0, 1, 1, radius);
+            spigot().playEffect(loc, effect, materialData.getItemType().getBlockID(), materialData.getData(), 0, 0, 0, 1, 1, radius);
         } else {
             int dataValue = data == null ? 0 : CraftEffect.getDataValue(effect, data);
             playEffect(loc, effect, dataValue, radius);

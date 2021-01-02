@@ -25,7 +25,9 @@ import org.bukkit.command.Command;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import red.mohist.Mohist;
+import com.mohistmc.MohistMC;
+import com.mohistmc.configuration.MohistConfig;
+import com.mohistmc.util.i18n.Message;
 
 public class SpigotConfig {
 
@@ -44,7 +46,7 @@ public class SpigotConfig {
     public static YamlConfiguration config;
     public static boolean logCommands;
     public static int tabComplete;
-    public static int timeoutTime = 60;
+    public static int timeoutTime = 90;
     public static boolean bungee;
     public static boolean lateBind;
     public static boolean disableStatSaving;
@@ -68,7 +70,7 @@ public class SpigotConfig {
     public static List<String> disabledAdvancements;
     static int version;
     static Map<String, Command> commands;
-    private static File CONFIG_FILE;
+    public static File CONFIG_FILE;
 
     public static void init(File configFile) {
         CONFIG_FILE = configFile;
@@ -189,7 +191,9 @@ public class SpigotConfig {
         restartScript = getString( "settings.restart-script", restartScript );
         restartMessage = transform( getString( "messages.restart", "Server is restarting" ) );
         commands.put( "restart", new RestartCommand( "restart" ) );
-        WatchdogThread.doStart( timeoutTime, restartOnCrash );
+        if (MohistConfig.instance.watchdog_spigot.getValue()) {
+            WatchdogThread.doStart(timeoutTime, restartOnCrash);
+        }
     }
 
     private static void bungee() {
@@ -203,7 +207,7 @@ public class SpigotConfig {
     private static void nettyThreads() {
         int count = getInt("settings.netty-threads", 4);
         System.setProperty("io.netty.eventLoopThreads", Integer.toString(count));
-        Bukkit.getLogger().log(Level.INFO, "Using {0} threads for Netty based IO", count);
+        Bukkit.getLogger().log(Level.INFO, Message.getString("mohist.start.nettyio_count"), count);
     }
 
     private static void lateBind() {
@@ -221,7 +225,7 @@ public class SpigotConfig {
         for (String name : section.getKeys(true)) {
             if (section.isInt(name)) {
                 if (StatList.getOneShotStat(name) == null) {
-                    Mohist.LOGGER.warn("Ignoring non existent stats.forced-stats " + name);
+                    MohistMC.LOGGER.warn("Ignoring non existent stats.forced-stats " + name);
                     continue;
                 }
                 forcedStats.put(name, section.getInt(name));
@@ -235,7 +239,7 @@ public class SpigotConfig {
 
     private static void playerSample() {
         playerSample = Math.max(getInt("settings.sample-count", 12), 0); // Paper - Avoid negative counts
-        LogManager.getLogger("Spigot").info("Server Ping Player Sample Count: " + playerSample);
+        LogManager.getLogger("Spigot").info(Message.getString("mohist.start.server_ping_count") + playerSample);
     }
 
     private static void playerShuffle() {

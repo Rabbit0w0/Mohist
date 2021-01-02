@@ -45,7 +45,8 @@ import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
-import red.mohist.Mohist;
+import com.mohistmc.MohistMC;
+import com.mohistmc.util.i18n.Message;
 
 /**
  * Represents the Bukkit core, for version and Server singleton handling
@@ -81,7 +82,7 @@ public final class Bukkit {
         }
 
         Bukkit.server = server;
-        Mohist.LOGGER.info("This server is running " + getName() + " version " + getVersion() + " (Implementing API version " + getBukkitVersion() + ")");
+        MohistMC.LOGGER.info(Message.getString("bukkit.version.servername") + getName() + Message.getString("bukkit.version.version") + " " + getVersion() + Message.getString("bukkit.version.apiversion") + getBukkitVersion() + ")");
     }
 
     /**

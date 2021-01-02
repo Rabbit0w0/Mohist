@@ -44,6 +44,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mohistmc.configuration.MohistConfig;
+import com.mohistmc.forge.BukkitPermissionsHandler;
+import com.mohistmc.forge.CustomMod;
+import io.netty.util.internal.ConcurrentSet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -93,11 +97,12 @@ import net.minecraftforge.fml.relauncher.libraries.LibraryManager;
 import net.minecraftforge.fml.relauncher.libraries.Repository;
 import net.minecraftforge.registries.GameData;
 import net.minecraftforge.registries.ObjectHolderRegistry;
+import net.minecraftforge.server.permission.PermissionAPI;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Level;
-import red.mohist.api.ServerAPI;
-import red.mohist.forge.MohistMod;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.api.ServerAPI;
+import com.mohistmc.forge.addon.MohistMod;
+import com.mohistmc.util.i18n.Message;
 
 /**
  * The loader class performs the actual loading of the mod code from disk.
@@ -172,7 +177,7 @@ public class Loader
     private LoadController modController;
     private MinecraftDummyContainer minecraft;
     private MCPDummyContainer mcp;
-    private MohistMod mohistMod;
+    private Set<CustomMod> customMods = new ConcurrentSet<>();
 
     private static File minecraftDir;
     private static List<String> injectedContainers;
@@ -215,16 +220,19 @@ public class Loader
 
         minecraft = new MinecraftDummyContainer(MC_VERSION);
         InputStream mcpModInputStream = getClass().getResourceAsStream("/mcpmod.info");
-        InputStream mohistModInputStream = MohistMod.modinfo();
+
+        customMods.add(new MohistMod(MohistMod.modinfo()));
+
         try
         {
             mcp = new MCPDummyContainer(MetadataCollection.from(mcpModInputStream, "MCP").getMetadataForId("mcp", null));
-            mohistMod = new MohistMod(MetadataCollection.from(mohistModInputStream, "Mohist").getMetadataForId("mohist", null));
         }
         finally
         {
             IOUtils.closeQuietly(mcpModInputStream);
-            IOUtils.closeQuietly(mohistModInputStream);
+            for (InputStream is : CustomMod.is) {
+                IOUtils.closeQuietly(is);
+            }
         }
     }
 
@@ -374,7 +382,11 @@ public class Loader
         mods.add(minecraft);
         // Add in the MCP mod container
         mods.add(new InjectedModContainer(mcp,new File("minecraft.jar")));
-        mods.add(new InjectedModContainer(mohistMod,new File("mohist.jar")));
+
+        for (CustomMod customMod : customMods) {
+            mods.add(new InjectedModContainer((DummyModContainer) customMod, customMod.jarFile()));
+        }
+
         for (String cont : injectedContainers)
         {
             ModContainer mc;
@@ -634,6 +646,8 @@ public class Loader
         FMLCommonHandler.instance().fireSidedRegistryEvents();
         ObjectHolderRegistry.INSTANCE.applyObjectHolders();
         ItemStackHolderInjector.INSTANCE.inject();
+        if (MohistConfig.instance.bukkitPermissionsHandler.getValue()) PermissionAPI.setPermissionHandler(new BukkitPermissionsHandler());
+        FMLLog.log.info("Registered Forge API Permission Handler(Bukkit)");
         modController.transition(LoaderState.INITIALIZATION, false);
         progressBar.step("Initializing Minecraft Engine");
     }

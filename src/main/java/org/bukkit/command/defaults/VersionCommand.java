@@ -13,8 +13,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.util.StringUtil;
-import red.mohist.Mohist;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.MohistMC;
+import com.mohistmc.util.i18n.Message;
 
 public class VersionCommand extends Command {
     public VersionCommand(String name) {
@@ -28,13 +28,10 @@ public class VersionCommand extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
-        if (!testPermission(sender)) {
-            sender.sendMessage(Message.getString("command.nopermission"));
-            return true;
-        }
+        if (!testPermission(sender)) return true;
 
         if (args.length == 0) {
-            sender.sendMessage("This server is running " + Bukkit.getName() + " version " + Mohist.getVersion() +  " (MC: 1.12.2) (Implementing API version " + Bukkit.getBukkitVersion() + ", Forge version " + ForgeVersion.getVersion() + ")");
+            sender.sendMessage("This server is running " + Bukkit.getName() + " version " + MohistMC.getVersion() +  " (MC: 1.12.2) (Implementing API version " + Bukkit.getBukkitVersion() + ", Forge version " + ForgeVersion.getVersion() + ")");
         } else {
             StringBuilder name = new StringBuilder();
 

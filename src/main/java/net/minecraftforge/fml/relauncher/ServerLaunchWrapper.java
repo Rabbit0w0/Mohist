@@ -19,11 +19,13 @@
 
 package net.minecraftforge.fml.relauncher;
 
+import com.mohistmc.console.log4j.Log4jCrashFix;
+import org.apache.logging.log4j.LogManager;
+import com.mohistmc.MohistMC;
+import com.mohistmc.util.i18n.Message;
+
 import java.lang.reflect.Method;
 import java.util.Objects;
-import org.apache.logging.log4j.LogManager;
-import red.mohist.Mohist;
-import red.mohist.util.i18n.Message;
 
 public class ServerLaunchWrapper {
 
@@ -49,24 +51,14 @@ public class ServerLaunchWrapper {
         }
         Class<?> launchwrapper = null;
         try {
-            launchwrapper = Class.forName("net.minecraft.launchwrapper.Launch", true, Mohist.class.getClassLoader());
-            Class.forName("org.objectweb.asm.Type", true, Mohist.class.getClassLoader());
-            System.out.println("");
-            System.out.println("                   __                     __      ");
-            System.out.println(" /'\\_/`\\          /\\ \\       __          /\\ \\__   ");
-            System.out.println("/\\      \\     ___ \\ \\ \\___  /\\_\\     ____\\ \\ ,_\\  ");
-            System.out.println("\\ \\ \\__\\ \\   / __`\\\\ \\  _ `\\\\/\\ \\   /',__\\\\ \\ \\/  ");
-            System.out.println(" \\ \\ \\_/\\ \\ /\\ \\L\\ \\\\ \\ \\ \\ \\\\ \\ \\ /\\__, `\\\\ \\ \\_ ");
-            System.out.println("  \\ \\_\\\\ \\_\\\\ \\____/ \\ \\_\\ \\_\\\\ \\_\\\\/\\____/ \\ \\__\\");
-            System.out.println("   \\/_/ \\/_/ \\/___/   \\/_/\\/_/ \\/_/ \\/___/   \\/__/");
-            System.out.println("");
-            System.out.println("");
-            System.out.println("                        " + Message.getString("forge.serverlanunchwrapper.1"));
+            launchwrapper = Class.forName("net.minecraft.launchwrapper.Launch", true, MohistMC.class.getClassLoader());
+            Class.forName("org.objectweb.asm.Type", true, MohistMC.class.getClassLoader());
             System.out.println(Message.getString("mohist.start"));
             System.out.println(Message.getString("load.libraries"));
-            Mohist.LOGGER = LogManager.getLogger("Mohist");
+            MohistMC.LOGGER = LogManager.getLogger("Mohist");
         } catch (Exception e) {
             System.out.println(Message.getString("mohist.start.error.nothavelibrary"));
+            System.out.println("   ");
             e.printStackTrace(System.err);
             System.exit(1);
         }
@@ -81,6 +73,7 @@ public class ServerLaunchWrapper {
         } catch (Exception e) {
             System.out.println(Message.getString("mohist.start.error"));
             e.printStackTrace(System.err);
+            new Log4jCrashFix(System.out).run();
             System.exit(1);
         }
     }

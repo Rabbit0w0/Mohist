@@ -1,30 +1,18 @@
 package org.bukkit.command;
 
 import co.aikar.timings.Timing;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
+import com.mohistmc.command.*;
+import com.mohistmc.command.PluginCommand;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.command.defaults.BukkitCommand;
-import org.bukkit.command.defaults.HelpCommand;
-import org.bukkit.command.defaults.PluginsCommand;
-import org.bukkit.command.defaults.ReloadCommand;
-import org.bukkit.command.defaults.VersionCommand;
+import org.bukkit.command.defaults.*;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
-import red.mohist.Mohist;
-import red.mohist.command.DumpCommand;
-import red.mohist.command.EntityCommand;
-import red.mohist.command.MohistCommand;
-import red.mohist.command.TileEntityCommand;
+import com.mohistmc.MohistMC;
+
+import java.util.*;
+import java.util.regex.Pattern;
 
 public class SimpleCommandMap implements CommandMap {
     private static final Pattern PATTERN_ON_SPACE = Pattern.compile(" ", Pattern.LITERAL);
@@ -43,9 +31,15 @@ public class SimpleCommandMap implements CommandMap {
         register("bukkit", new ReloadCommand("reload"));
         // Mohist
         register("mohist", new MohistCommand("mohist"));
-        register("dump", new DumpCommand("dump"));
-        register("entity", new EntityCommand("entity"));
-        register("tileentity", new TileEntityCommand("tileentity"));
+        register("mohist", new GetPluginListCommand("getpluginlist"));
+        register("mohist", new GetModListCommand("getmodlist"));
+        register("mohist", new WhitelistModsCommand("whitelistmods"));
+        register("mohist", new DownloadFileCommand("downloadfile"));
+        register("mohist", new UpdateMohistCommand("updatemohist"));
+        register("mohist", new DumpCommand("dump"));
+        register("mohist", new EntityCommand("entity"));
+        register("mohist", new TileEntityCommand("tileentity"));
+        register("mohist", new PluginCommand("plugin"));
     }
 
     public void setFallbackCommands() {
@@ -249,7 +243,7 @@ public class SimpleCommandMap implements CommandMap {
         for (Map.Entry<String, String[]> entry : values.entrySet()) {
             String alias = entry.getKey();
             if (alias.contains(" ")) {
-                Mohist.LOGGER.warn("Could not register alias " + alias + " because it contains illegal characters");
+                MohistMC.LOGGER.warn("Could not register alias " + alias + " because it contains illegal characters");
                 continue;
             }
 
@@ -272,7 +266,7 @@ public class SimpleCommandMap implements CommandMap {
             }
 
             if (bad.length() > 0) {
-                Mohist.LOGGER.warn("Could not register alias " + alias + " because it contains commands that do not exist: " + bad);
+                MohistMC.LOGGER.warn("Could not register alias " + alias + " because it contains commands that do not exist: " + bad);
                 continue;
             }
 

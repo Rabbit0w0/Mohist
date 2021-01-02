@@ -11,14 +11,17 @@ import java.security.CodeSource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import org.apache.commons.io.IOUtils;
+import net.md_5.specialsource.repo.RuntimeRepo;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraft.server.MinecraftServer;
 import org.apache.commons.lang.Validate;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.PluginDescriptionFile;
-import red.mohist.bukkit.nms.ClassLoaderContext;
-import red.mohist.bukkit.nms.utils.RemapUtils;
+import com.mohistmc.bukkit.nms.ClassLoaderContext;
+import com.mohistmc.bukkit.nms.utils.RemapUtils;
 
 /**
  * A ClassLoader for plugins, to allow shared classes across multiple plugins
@@ -36,6 +39,7 @@ public final class PluginClassLoader extends URLClassLoader {
     private final URL url;
     private JavaPlugin pluginInit;
     private IllegalStateException pluginState;
+    private LaunchClassLoader launchClassLoader;
 
     PluginClassLoader(final JavaPluginLoader loader, final ClassLoader parent, final PluginDescriptionFile description, final File dataFolder, final File file) throws IOException, InvalidPluginException {
         super(new URL[]{file.toURI().toURL()}, parent);
@@ -48,6 +52,7 @@ public final class PluginClassLoader extends URLClassLoader {
         this.manifest = jar.getManifest();
         this.url = file.toURI().toURL();
 
+        this.launchClassLoader = parent instanceof LaunchClassLoader ? (LaunchClassLoader)parent : (LaunchClassLoader) MinecraftServer.getServerInst().getClass().getClassLoader();
         try {
             Class<?> jarClass;
             try {
@@ -82,7 +87,7 @@ public final class PluginClassLoader extends URLClassLoader {
         try {
             if (name.replace("/", ".").startsWith("net.minecraft.server.v1_12_R1")) {
                 String remappedClass = RemapUtils.jarMapping.byNMSName.get(name).getMcpName();
-                return Class.forName(remappedClass);
+                return launchClassLoader.findClass(remappedClass);
             }
 
             if (name.startsWith("org.bukkit.")) {
@@ -98,13 +103,13 @@ public final class PluginClassLoader extends URLClassLoader {
                     if (result == null) {
                         result = remappedFindClass(name);
 
+                        if (result == null) {
+                            result = super.findClass(name);
+                        }
+
                         if (result != null) {
                             loader.setClass(name, result);
                         }
-                    }
-
-                    if (result == null) {
-                        throw new ClassNotFoundException(name);
                     }
 
                     classes.put(name, result);
@@ -148,20 +153,36 @@ public final class PluginClassLoader extends URLClassLoader {
         try {
             // Load the resource to the name
             String path = name.replace('.', '/').concat(".class");
-            URL url = this.findResource(path);
-            if (url != null) {
-                InputStream stream = url.openStream();
+            JarEntry entry = this.jar.getJarEntry(path);
+            if (entry != null) {
+                InputStream stream = this.jar.getInputStream(entry);
                 if (stream != null) {
-                    byte[] bytecode = IOUtils.toByteArray(stream);
-                    bytecode = RemapUtils.remapFindClass(bytecode);
-                    JarURLConnection jarURLConnection = (JarURLConnection) url.openConnection();
-                    URL jarURL = jarURLConnection.getJarFileURL();
-                    CodeSource codeSource = new CodeSource(jarURL, new CodeSigner[0]);
+                    byte[] classBytes = RemapUtils.jarRemapper.remapClassFile(stream, RuntimeRepo.getInstance());
+                    classBytes = RemapUtils.remapFindClass(classBytes);
 
-                    result = this.defineClass(name, bytecode, 0, bytecode.length, codeSource);
+                    CodeSigner[] signers = entry.getCodeSigners();
+                    CodeSource source = new CodeSource(this.url, signers);
+
+                    result = this.defineClass(name, classBytes, 0, classBytes.length, source);
                     if (result != null) {
                         // Resolve it - sets the class loader of the class
                         this.resolveClass(result);
+                    }
+                }
+            } else {
+                final URL url = this.findResource(path);
+                if (url != null) {
+                    final InputStream stream = url.openStream();
+                    if (stream != null) {
+                        byte[] bytecode = RemapUtils.jarRemapper.remapClassFile(stream, RuntimeRepo.getInstance());
+                        bytecode = RemapUtils.remapFindClass(bytecode);
+                        final JarURLConnection jarURLConnection = (JarURLConnection) url.openConnection();
+                        final URL jarURL = jarURLConnection.getJarFileURL();
+                        final CodeSource codeSource = new CodeSource(jarURL, new CodeSigner[0]);
+                        result = this.defineClass(name, bytecode, 0, bytecode.length, codeSource);
+                        if (result != null) {
+                            this.resolveClass(result);
+                        }
                     }
                 }
             }

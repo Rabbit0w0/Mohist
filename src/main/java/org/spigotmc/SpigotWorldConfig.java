@@ -3,8 +3,8 @@ package org.spigotmc;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import red.mohist.Mohist;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.MohistMC;
+import com.mohistmc.util.i18n.Message;
 
 public class SpigotWorldConfig {
 
@@ -76,7 +76,7 @@ public class SpigotWorldConfig {
         this.verbose = getBoolean("verbose", true);
 
         Object[] p = {worldName};
-        Mohist.LOGGER.info(Message.getFormatString("world.settings", p));
+        MohistMC.LOGGER.info(Message.getFormatString("world.settings", p));
         SpigotConfig.readConfig(SpigotWorldConfig.class, this);
     }
 
@@ -280,5 +280,13 @@ public class SpigotWorldConfig {
 
     private void squidSpawnRange() {
         squidSpawnRangeMin = getDouble("squid-spawn-range.min", 45.0D);
+    }
+
+    public int cactusMaxHeight;
+    public int reedMaxHeight;
+    private void blockGrowthHeight() {
+        cactusMaxHeight = getInt("max-growth-height.cactus", 3);
+        reedMaxHeight = getInt("max-growth-height.reeds", 3);
+        log("Max height for cactus growth " + cactusMaxHeight + ". Max height for reed growth " + reedMaxHeight);
     }
 }

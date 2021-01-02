@@ -7,7 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.util.i18n.Message;
 
 public class TicksPerSecondCommand extends Command {
 
@@ -26,10 +26,7 @@ public class TicksPerSecondCommand extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
-        if (!testPermission(sender)) {
-            sender.sendMessage(Message.getString("command.nopermission"));
-            return true;
-        }
+        if (!testPermission(sender)) return true;
         World currentWorld = null;
         if (sender instanceof CraftPlayer) {
             currentWorld = ((CraftPlayer) sender).getWorld();

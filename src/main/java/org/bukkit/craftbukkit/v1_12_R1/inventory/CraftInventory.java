@@ -24,7 +24,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import red.mohist.inventory.InventoryOwner;
+import com.mohistmc.inventory.InventoryOwner;
 
 public class CraftInventory implements Inventory {
     protected final IInventory inventory;
@@ -114,7 +114,7 @@ public class CraftInventory implements Inventory {
 
     public boolean contains(Material material) {
         Validate.notNull(material, "Material cannot be null");
-        return contains(material.getId());
+        return material.isForgeBlock() ? contains(material.getBlockID()) : contains(material.getId());
     }
 
     public boolean contains(ItemStack item) {
@@ -516,11 +516,15 @@ public class CraftInventory implements Inventory {
 
     @Override
     public Location getLocation() {
-        if (inventory instanceof net.minecraft.tileentity.TileEntity) {
-            TileEntity tileEntity = (TileEntity) inventory;
-            return new Location(tileEntity.getWorld().getWorld(), tileEntity.getPos().getX(), tileEntity.getPos().getY(), tileEntity.getPos().getZ());
-        } else {
+        try {
             return inventory.getLocation();
+        } catch (AbstractMethodError e) {
+            if (inventory instanceof net.minecraft.tileentity.TileEntity) {
+                TileEntity tileEntity = (TileEntity) inventory;
+                return new Location(tileEntity.getWorld().getWorld(), tileEntity.getPos().getX(), tileEntity.getPos().getY(), tileEntity.getPos().getZ());
+            }else{
+                return null;
+            }
         }
     }
 }

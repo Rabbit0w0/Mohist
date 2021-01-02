@@ -1,5 +1,6 @@
 package org.bukkit.craftbukkit.v1_12_R1.block;
 
+import com.mohistmc.forge.ForgeInjectBukkit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +11,7 @@ import net.minecraft.block.BlockRedstoneWire;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -36,6 +38,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BlockVector;
+import com.mohistmc.block.CraftCustomContainer;
 
 public class CraftBlock implements Block {
     private final CraftChunk chunk;
@@ -110,6 +113,9 @@ public class CraftBlock implements Block {
     public static net.minecraft.world.biome.Biome biomeToBiomeBase(Biome bio) {
         if (bio == null) {
             return null;
+        }
+        if (ForgeInjectBukkit.biomeMap.containsKey(bio)) {
+            return ForgeInjectBukkit.biomeMap.get(bio);
         }
 
         return net.minecraft.world.biome.Biome.REGISTRY.getObject(new ResourceLocation(bio.name().toLowerCase(java.util.Locale.ENGLISH)));
@@ -186,7 +192,7 @@ public class CraftBlock implements Block {
 
     @Override
     public void setType(Material type, boolean applyPhysics) {
-        setTypeId(type.getId(), applyPhysics);
+        setTypeId(type.getBlockID(), applyPhysics);
     }
 
     public boolean setTypeId(final int type) {
@@ -277,7 +283,7 @@ public class CraftBlock implements Block {
             if ((this.getX() + face.getModX() == block.getX()) &&
                     (this.getY() + face.getModY() == block.getY()) &&
                     (this.getZ() + face.getModZ() == block.getZ())
-                    ) {
+            ) {
                 return face;
             }
         }
@@ -293,97 +299,105 @@ public class CraftBlock implements Block {
     @Override
     public BlockState getState() {
         Material material = getType();
-        // Cauldron start - if null, check for TE that implements IInventory
-        if (material == null) {
-            TileEntity tileEntity = ((CraftWorld)this.getWorld()).getHandle().getTileEntity(new BlockPos(x, y, z));
+        // Mohist start - check for TE that implements IInventory
+        if (material.isForgeBlock()) {
+            TileEntity tileEntity = chunk.getCraftWorld().getTileEntityAt(x, y, z);
             if (tileEntity != null) {
-                return new CraftBlockEntityState<TileEntity>(this, (Class<TileEntity>) tileEntity.getClass());
+                // block with IInventory
+                if (tileEntity instanceof IInventory) {
+                    return new CraftCustomContainer(this);
+                }
+                return new CraftBlockEntityState<>(this, tileEntity.getClass());
             } else {
                 return new CraftBlockState(this);
             }
         }
-        // Cauldron end
+        // Mohist end
         switch (material) {
-        case SIGN:
-        case SIGN_POST:
-        case WALL_SIGN:
-            return new CraftSign(this);
-        case CHEST:
-        case TRAPPED_CHEST:
-            return new CraftChest(this);
-        case BURNING_FURNACE:
-        case FURNACE:
-            return new CraftFurnace(this);
-        case DISPENSER:
-            return new CraftDispenser(this);
-        case DROPPER:
-            return new CraftDropper(this);
-        case END_GATEWAY:
-            return new CraftEndGateway(this);
-        case HOPPER:
-            return new CraftHopper(this);
-        case MOB_SPAWNER:
-            return new CraftCreatureSpawner(this);
-        case NOTE_BLOCK:
-            return new CraftNoteBlock(this);
-        case JUKEBOX:
-            return new CraftJukebox(this);
-        case BREWING_STAND:
-            return new CraftBrewingStand(this);
-        case SKULL:
-            return new CraftSkull(this);
-        case COMMAND:
-        case COMMAND_CHAIN:
-        case COMMAND_REPEATING:
-            return new CraftCommandBlock(this);
-        case BEACON:
-            return new CraftBeacon(this);
-        case BANNER:
-        case WALL_BANNER:
-        case STANDING_BANNER:
-            return new CraftBanner(this);
-        case FLOWER_POT:
-            return new CraftFlowerPot(this);
-        case STRUCTURE_BLOCK:
-            return new CraftStructureBlock(this);
-        case WHITE_SHULKER_BOX:
-        case ORANGE_SHULKER_BOX:
-        case MAGENTA_SHULKER_BOX:
-        case LIGHT_BLUE_SHULKER_BOX:
-        case YELLOW_SHULKER_BOX:
-        case LIME_SHULKER_BOX:
-        case PINK_SHULKER_BOX:
-        case GRAY_SHULKER_BOX:
-        case SILVER_SHULKER_BOX:
-        case CYAN_SHULKER_BOX:
-        case PURPLE_SHULKER_BOX:
-        case BLUE_SHULKER_BOX:
-        case BROWN_SHULKER_BOX:
-        case GREEN_SHULKER_BOX:
-        case RED_SHULKER_BOX:
-        case BLACK_SHULKER_BOX:
-            return new CraftShulkerBox(this);
-        case ENCHANTMENT_TABLE:
-            return new CraftEnchantingTable(this);
-        case ENDER_CHEST:
-            return new CraftEnderChest(this);
-        case DAYLIGHT_DETECTOR:
-        case DAYLIGHT_DETECTOR_INVERTED:
-            return new CraftDaylightDetector(this);
-        case REDSTONE_COMPARATOR_OFF:
-        case REDSTONE_COMPARATOR_ON:
-            return new CraftComparator(this);
-        case BED_BLOCK:
-            return new CraftBed(this);
-        default:
-            // Cauldron start
-            TileEntity tileEntity = ((CraftWorld)this.getWorld()).getHandle().getTileEntity(new BlockPos(x, y, z));;
-            if (tileEntity != null) {
-                return new CraftBlockEntityState<TileEntity>(this, (Class<TileEntity>) tileEntity.getClass());
-            } else {
-                return new CraftBlockState(this);
-            }
-            // Cauldron end
+            case SIGN:
+            case SIGN_POST:
+            case WALL_SIGN:
+                return new CraftSign(this);
+            case CHEST:
+            case TRAPPED_CHEST:
+                return new CraftChest(this);
+            case BURNING_FURNACE:
+            case FURNACE:
+                return new CraftFurnace(this);
+            case DISPENSER:
+                return new CraftDispenser(this);
+            case DROPPER:
+                return new CraftDropper(this);
+            case END_GATEWAY:
+                return new CraftEndGateway(this);
+            case HOPPER:
+                return new CraftHopper(this);
+            case MOB_SPAWNER:
+                return new CraftCreatureSpawner(this);
+            case NOTE_BLOCK:
+                return new CraftNoteBlock(this);
+            case JUKEBOX:
+                return new CraftJukebox(this);
+            case BREWING_STAND:
+                return new CraftBrewingStand(this);
+            case SKULL:
+                return new CraftSkull(this);
+            case COMMAND:
+            case COMMAND_CHAIN:
+            case COMMAND_REPEATING:
+                return new CraftCommandBlock(this);
+            case BEACON:
+                return new CraftBeacon(this);
+            case BANNER:
+            case WALL_BANNER:
+            case STANDING_BANNER:
+                return new CraftBanner(this);
+            case FLOWER_POT:
+                return new CraftFlowerPot(this);
+            case STRUCTURE_BLOCK:
+                return new CraftStructureBlock(this);
+            case WHITE_SHULKER_BOX:
+            case ORANGE_SHULKER_BOX:
+            case MAGENTA_SHULKER_BOX:
+            case LIGHT_BLUE_SHULKER_BOX:
+            case YELLOW_SHULKER_BOX:
+            case LIME_SHULKER_BOX:
+            case PINK_SHULKER_BOX:
+            case GRAY_SHULKER_BOX:
+            case SILVER_SHULKER_BOX:
+            case CYAN_SHULKER_BOX:
+            case PURPLE_SHULKER_BOX:
+            case BLUE_SHULKER_BOX:
+            case BROWN_SHULKER_BOX:
+            case GREEN_SHULKER_BOX:
+            case RED_SHULKER_BOX:
+            case BLACK_SHULKER_BOX:
+                return new CraftShulkerBox(this);
+            case ENCHANTMENT_TABLE:
+                return new CraftEnchantingTable(this);
+            case ENDER_CHEST:
+                return new CraftEnderChest(this);
+            case DAYLIGHT_DETECTOR:
+            case DAYLIGHT_DETECTOR_INVERTED:
+                return new CraftDaylightDetector(this);
+            case REDSTONE_COMPARATOR_OFF:
+            case REDSTONE_COMPARATOR_ON:
+                return new CraftComparator(this);
+            case BED_BLOCK:
+                return new CraftBed(this);
+            default:
+                // Cauldron start
+                TileEntity tileEntity = chunk.getCraftWorld().getTileEntityAt(x, y, z);
+                if (tileEntity != null) {
+                    // block with IInventory
+                    if (tileEntity instanceof IInventory) {
+                        return new CraftCustomContainer(this);
+                    }
+                    return new CraftBlockEntityState<>(this, tileEntity.getClass());
+                } else {
+                    return new CraftBlockState(this);
+                }
+                // Cauldron end
         }
     }
 

@@ -1,0 +1,20 @@
+--- ../src-base/minecraft/net/minecraft/command/CommandBase.java
++++ ../src-work/minecraft/net/minecraft/command/CommandBase.java
+@@ -40,6 +40,7 @@
+     private static ICommandListener field_71533_a;
+     private static final Splitter field_190796_b = Splitter.on(',');
+     private static final Splitter field_190797_c = Splitter.on('=').limit(2);
++    public String permissionNode = "minecraft";
+ 
+     protected static SyntaxErrorException func_184889_a(JsonParseException p_184889_0_)
+     {
+@@ -393,7 +394,7 @@
+                 itextcomponent.func_150258_a(" ");
+             }
+ 
+-            ITextComponent itextcomponent1 = new TextComponentString(p_147176_1_[i]);
++            ITextComponent itextcomponent1 = net.minecraftforge.common.ForgeHooks.newChatWithLinks(p_147176_1_[i]); // Forge: links for messages
+\ No newline at end of file
+ 
+             if (p_147176_3_)
+             {

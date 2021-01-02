@@ -40,7 +40,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerPreLoginEvent;
-import red.mohist.Mohist;
+import com.mohistmc.MohistMC;
 
 //Preliminary, simple Fake Player class
 public class FakePlayer extends EntityPlayerMP
@@ -69,14 +69,13 @@ public class FakePlayer extends EntityPlayerMP
                 Bukkit.getPluginManager().callEvent(prelogin1);
                 PlayerLoginEvent login = new PlayerLoginEvent(getBukkitEntity(), "localhost", InetAddress.getLoopbackAddress());
                 Bukkit.getPluginManager().callEvent(login);
-                Mohist.LOGGER.info("%s","Fakeplayer "+getName()+" ("+getUniqueID()+") joined server");
+                MohistMC.LOGGER.info("%s","Fakeplayer "+getName()+" ("+getUniqueID()+") joined server");
             });
         }).start();
     }
 
     @Override public Vec3d getPositionVector(){ return new Vec3d(0, 0, 0); }
     @Override public boolean canUseCommand(int i, String s){ return false; }
-    @Override public boolean canUseCommand(int i, String s, String perm){ return false; }
     @Override public void sendStatusMessage(ITextComponent chatComponent, boolean actionBar){}
     @Override public void sendMessage(ITextComponent component) {}
     @Override public void addStat(StatBase par1StatBase, int par2){}

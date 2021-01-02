@@ -15,7 +15,7 @@ import org.bukkit.entity.minecart.CommandMinecart;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.util.StringUtil;
-import red.mohist.util.i18n.Message;
+import com.mohistmc.util.i18n.Message;
 
 /**
  * Represents a Command, which executes various tasks upon user input
@@ -221,7 +221,7 @@ public abstract class Command {
         }
 
         if (permissionMessage == null) {
-            target.sendMessage(Message.getString("command.nopermission"));
+            target.sendMessage(Message.getFormatString("command.nopermission", new Object[]{ permission }));
         } else if (permissionMessage.length() != 0) {
             for (String line : permissionMessage.replace("<permission>", permission).split("\n")) {
                 target.sendMessage(line);
